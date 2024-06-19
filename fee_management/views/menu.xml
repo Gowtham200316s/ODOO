@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <menuitem id="fee_menu_root"
+              name="Fee Management"
+              sequence="10">
+        <menuitem id="fee_menu"
+                  name="Fee"
+                  sequence="10"/>
+
+        <menuitem id="fee_details_menu_root"
+                  name="Fee details"
+                  action="action_fee"
+                  sequence="10">
+        </menuitem>
+        <menuitem id="lost_details_menu_root"
+                  name="Fee details"
+                  action="action_lost"
+                  sequence="20">
+        </menuitem>
+
+
+    </menuitem>
+</odoo>
