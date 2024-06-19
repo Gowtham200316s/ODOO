@@ -4,7 +4,7 @@
     'category': 'Fee',
     'version': '15.0',
     'price': '10.0',
-    'currency': 'INR',
+    'currency': 'USD',
     
     'summary': 'odoo 16 development',
     'description': """
