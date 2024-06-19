@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="lost_view_tree" model="ir.ui.view">
+        <field name="name">lost_view.tree</field>
+        <field name="model">lost.reason</field>
+        <field name="arch" type="xml">
+            <tree string="list view">
+                 <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_lost" model="ir.actions.act_window">
+          <field name="name">Cancel details</field>
+          <field name="type">ir.actions.act_window</field>
+          <field name="res_model">lost.reason</field>
+          <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+
+access_fee_management,access_fee_management,model_fee_management,base.group_user,1,1,1,1
+access_lost_reason,access_lost_reason,model_lost_reason,base.group_user,1,1,1,1
+access_lost_fee,access_lost_fee,model_lost_fee,base.group_user,1,1,1,1
+
+
