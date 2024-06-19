@@ -3,6 +3,8 @@
     'author': 'Gowtham A ',
     'category': 'Fee',
     'version': '16.0',
+    'price': '10.0',
+    'currency': 'INR'
     
     'summary': 'odoo 16 development',
     'description': """
