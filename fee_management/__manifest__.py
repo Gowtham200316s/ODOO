@@ -3,7 +3,7 @@
     'author': 'Gowtham A ',
     'category': 'Fee',
     'version': '15.0',
-    'price': '10.0',
+    'price': '0.5',
     'currency': 'USD',
     
     'summary': 'odoo 16 development',
