@@ -1,6 +1,6 @@
 {
     'name': 'Fee management',
-    'author': 'Girik Advik ',
+    'author': 'Girik Adhvik ',
     'category': 'Fee',
     'version': '15.0',
     'price': '0.5',
