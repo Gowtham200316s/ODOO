@@ -10,6 +10,8 @@
     'category': 'Product',
     'version': '13.0',
     'license': 'LGPL-3',
+    'price': '0.5',
+    'currency': 'USD',
     'images': ['images/QRcode.png'],
     'depends': ['base','product'],
     'data': [
