@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Punch Time Calculator</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      padding: 40px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .container {
+      max-width: 450px;
+      margin: auto;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 25px 20px;
+      border-radius: 10px;
+    }
+
+    label {
+      margin-bottom: 5px;
+      display: block;
+      font-size: 15px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+    }
+
+    input[readonly] {
+      background-color: #e6e6e6;
+      color: #000;
+    }
+
+    button {
+      width: 100%;
+      background: #00c9a7;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    #result {
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    #clock {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Working Hours Calculator</h2>
+
+  <div id="clock"></div>
+
+  <label for="punched">Punched Hours (HH:MM):</label>
+  <input type="text" id="punched" placeholder="e.g. 5:22">
+
+  <label for="now">Current Time (HH:MM, 24hr):</label>
+  <input type="text" id="now" readonly>
+
+  <label for="end">Office End Time (HH:MM, 24hr):</label>
+  <input type="text" id="end" value="18:30">
+
+  <button onclick="calculateHours()">Calculate</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+function updateClock() {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-IN', { hour12: false });
+  const hhmm = timeStr.substring(0,5); // Only HH:MM
+  document.getElementById('clock').innerHTML = "🕒 Current Time (IST): " + timeStr;
+  document.getElementById('now').value = hhmm;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function parseTime(t) {
+  let [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function formatTime(mins) {
+  let h = Math.floor(mins / 60);
+  let m = mins % 60;
+  return `${h} hrs ${m} mins`;
+}
+
+function calculateHours() {
+  let punched = document.getElementById('punched').value;
+  let now = document.getElementById('now').value;
+  let end = document.getElementById('end').value;
+
+  if (!punched || !now || !end) {
+    document.getElementById('result').innerText = "Please fill all fields.";
+    return;
+  }
+
+  let punchedMins = parseTime(punched);
+  let nowMins = parseTime(now);
+  let endMins = parseTime(end);
+  let requiredMins = 510; // 8:30 hrs
+
+  let remainingMins = endMins - nowMins;
+  let totalMins = punchedMins + remainingMins;
+
+  let completionTime = null;
+  if (punchedMins < requiredMins) {
+    let minutesNeeded = requiredMins - punchedMins;
+    let nowDate = new Date();
+    let completeAt = new Date(nowDate.getTime() + minutesNeeded * 60000);
+    completionTime = completeAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+
+  let status = "";
+  if (totalMins > requiredMins) {
+    status = `✅ You will exceed by ${formatTime(totalMins - requiredMins)}.`;
+  } else if (totalMins < requiredMins) {
+    status = `⚠️ You will be short by ${formatTime(requiredMins - totalMins)}.`;
+  } else {
+    status = `✅ You will exactly meet your 8:30 hrs.`;
+  }
+
+  document.getElementById('result').innerHTML = `
+    <p>Total by ${end}: <strong>${formatTime(totalMins)}</strong></p>
+    <p>${status}</p>
+    ${completionTime ? `<p>⏱️ You will complete 8:30 hrs at: <strong>${completionTime} IST</strong></p>` : ""}
+  `;
+}
+</script>
+
+</body>
+</html>
