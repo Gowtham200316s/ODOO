@@ -2,55 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Punch Time Calculator</title>
-  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Punch Time & World Clock</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
       background: url('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
       background-size: cover;
       color: #fff;
       padding: 40px;
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
+    h2 { text-align: center; margin-bottom: 20px; }
     .container {
-      max-width: 450px;
-      margin: auto;
+      width: 420px;
       background: rgba(0, 0, 0, 0.6);
       padding: 25px 20px;
       border-radius: 10px;
     }
-
     label {
       margin-bottom: 5px;
       display: block;
       font-size: 15px;
     }
-
-    input {
+    input, select {
       width: 100%;
       padding: 10px;
       font-size: 16px;
       border: none;
       border-radius: 5px;
       margin-bottom: 15px;
-      box-sizing: border-box;
     }
-
     input[readonly] {
       background-color: #e6e6e6;
       color: #000;
     }
-
     button {
       width: 100%;
       background: #00c9a7;
@@ -60,9 +49,7 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      margin-top: 10px;
     }
-
     #result {
       margin-top: 20px;
       background: rgba(255, 255, 255, 0.1);
@@ -70,7 +57,6 @@
       border-radius: 5px;
       font-size: 16px;
     }
-
     #clock {
       text-align: center;
       font-size: 20px;
@@ -80,38 +66,73 @@
 </head>
 <body>
 
+<!-- Left Side -->
 <div class="container">
   <h2>Working Hours Calculator</h2>
-
   <div id="clock"></div>
 
-  <label for="punched">Punched Hours (HH:MM):</label>
-  <input type="text" id="punched" placeholder="e.g. 5:22">
+  <label for="punched">Punched Hours (HH:MM or decimal):</label>
+  <input type="text" id="punched" placeholder="e.g. 5:30 or 0.25">
 
-  <label for="now">Current Time (HH:MM, 24hr):</label>
+  <label for="now">Current Time (HH:MM):</label>
   <input type="text" id="now" readonly>
 
-  <label for="end">Office End Time (HH:MM, 24hr):</label>
+  <label for="end">Office End Time (HH:MM):</label>
   <input type="text" id="end" value="18:30">
 
-  <button onclick="calculateHours()">Calculate</button>
+  <label for="required">Required Working Time:</label>
+  <select id="required">
+    <option value="480">8:00 hrs</option>
+    <option value="510">8:30 hrs</option>
+    <option value="540">9:00 hrs</option>
+  </select>
 
+  <button onclick="calculateHours()">Calculate</button>
   <div id="result"></div>
+</div>
+
+<!-- Right Side -->
+<div class="container">
+  <h2>IST to World Clock 🌍</h2>
+  <label for="tzSearch">Search Time Zone:</label>
+  <input type="text" id="tzSearch" placeholder="e.g. Tokyo, New York">
+
+  <label for="targetZone">Select Time Zone:</label>
+  <select id="targetZone"></select>
+
+  <label for="convertedTime">Converted Time:</label>
+  <input type="text" id="convertedTime" readonly>
+
+  <button onclick="convertTime()">Convert from IST</button>
 </div>
 
 <script>
 function updateClock() {
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-IN', { hour12: false });
-  const hhmm = timeStr.substring(0,5); // Only HH:MM
+  const hhmm = timeStr.substring(0, 5);
   document.getElementById('clock').innerHTML = "🕒 Current Time (IST): " + timeStr;
   document.getElementById('now').value = hhmm;
 }
 setInterval(updateClock, 1000);
 updateClock();
 
+function parsePunched(input) {
+  input = input.trim();
+  if (input.includes(":")) {
+    const [h, m] = input.split(":").map(Number);
+    if (isNaN(h) || isNaN(m) || h < 0 || m < 0) return NaN;
+    return h * 60 + m;
+  } else {
+    const decimal = parseFloat(input);
+    if (isNaN(decimal) || decimal < 0) return NaN;
+    return Math.round(decimal * 60);
+  }
+}
+
 function parseTime(t) {
-  let [h, m] = t.split(':').map(Number);
+  const [h, m] = t.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return NaN;
   return h * 60 + m;
 }
 
@@ -122,45 +143,88 @@ function formatTime(mins) {
 }
 
 function calculateHours() {
-  let punched = document.getElementById('punched').value;
-  let now = document.getElementById('now').value;
-  let end = document.getElementById('end').value;
+  const punchedRaw = document.getElementById('punched').value;
+  const now = document.getElementById('now').value;
+  const end = document.getElementById('end').value;
+  const requiredMins = parseInt(document.getElementById('required').value);
 
-  if (!punched || !now || !end) {
-    document.getElementById('result').innerText = "Please fill all fields.";
+  const punchedMins = parsePunched(punchedRaw);
+  const nowMins = parseTime(now);
+  const endMins = parseTime(end);
+
+  if (isNaN(punchedMins) || isNaN(nowMins) || isNaN(endMins)) {
+    document.getElementById('result').innerHTML = `<p style="color: yellow;">⚠️ Invalid time format. Use HH:MM or decimal hours.</p>`;
     return;
   }
 
-  let punchedMins = parseTime(punched);
-  let nowMins = parseTime(now);
-  let endMins = parseTime(end);
-  let requiredMins = 510; // 8:30 hrs
+  const remainingMins = endMins - nowMins;
+  const totalMins = punchedMins + remainingMins;
 
-  let remainingMins = endMins - nowMins;
-  let totalMins = punchedMins + remainingMins;
-
-  let completionTime = null;
-  if (punchedMins < requiredMins) {
-    let minutesNeeded = requiredMins - punchedMins;
-    let nowDate = new Date();
-    let completeAt = new Date(nowDate.getTime() + minutesNeeded * 60000);
+  let completionTime = "";
+  if (punchedMins < requiredMins && totalMins < requiredMins) {
+    const minutesNeeded = requiredMins - punchedMins;
+    const nowDate = new Date();
+    const completeAt = new Date(nowDate.getTime() + minutesNeeded * 60000);
     completionTime = completeAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
   }
 
-  let status = "";
-  if (totalMins > requiredMins) {
-    status = `✅ You will exceed by ${formatTime(totalMins - requiredMins)}.`;
-  } else if (totalMins < requiredMins) {
-    status = `⚠️ You will be short by ${formatTime(requiredMins - totalMins)}.`;
+  let status = `✅ Total by ${end}: <strong>${formatTime(totalMins)}</strong>`;
+  let suggestion = "";
+
+  if (punchedMins >= requiredMins) {
+    suggestion = `🎉 You’ve completed your work hours. You can leave now!`;
+  } else if (punchedMins >= requiredMins - 30) {
+    suggestion = `😊 You are almost done! Pack your things, you will finish soon.`;
+  } else if (totalMins >= requiredMins) {
+    suggestion = `👍 You will complete your working hours by end of the day.`;
   } else {
-    status = `✅ You will exactly meet your 8:30 hrs.`;
+    suggestion = `⚠️ You haven't completed your work hours. Please continue working.`;
   }
 
   document.getElementById('result').innerHTML = `
-    <p>Total by ${end}: <strong>${formatTime(totalMins)}</strong></p>
     <p>${status}</p>
-    ${completionTime ? `<p>⏱️ You will complete 8:30 hrs at: <strong>${completionTime} IST</strong></p>` : ""}
+    <p>${suggestion}</p>
+    ${(punchedMins < requiredMins && totalMins < requiredMins) ? `<p>⏱️ You will complete your work at: <strong>${completionTime} IST</strong></p>` : ""}
   `;
+}
+
+// World Clock Code
+const timeZones = Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : [
+  "UTC", "Asia/Kolkata", "America/New_York", "Europe/London", "Asia/Dubai", "Asia/Tokyo",
+  "Australia/Sydney", "Europe/Paris", "America/Los_Angeles", "Asia/Shanghai", "Africa/Nairobi", "Europe/Berlin"
+];
+
+const tzSelect = document.getElementById("targetZone");
+const tzSearch = document.getElementById("tzSearch");
+
+function populateZones(filter = "") {
+  tzSelect.innerHTML = "";
+  timeZones
+    .filter(tz => tz.toLowerCase().includes(filter.toLowerCase()))
+    .forEach(tz => {
+      const option = document.createElement("option");
+      option.value = tz;
+      option.text = tz.replace("_", " ");
+      tzSelect.appendChild(option);
+    });
+}
+tzSearch.addEventListener("input", () => {
+  populateZones(tzSearch.value);
+});
+populateZones();
+
+function convertTime() {
+  const zone = document.getElementById("targetZone").value;
+  const istNow = new Date();
+  const options = {
+    timeZone: zone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  };
+  const formatter = new Intl.DateTimeFormat([], options);
+  const converted = formatter.format(istNow);
+  document.getElementById('convertedTime').value = converted;
 }
 </script>
 
