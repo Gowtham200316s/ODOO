@@ -66,7 +66,7 @@
 </head>
 <body>
 
-<!-- Left Side -->
+<!-- Working Hours Calculator -->
 <div class="container">
   <h2>Working Hours Calculator</h2>
   <div id="clock"></div>
@@ -83,7 +83,7 @@
   <label for="required">Required Working Time:</label>
   <select id="required">
     <option value="480">8:00 hrs</option>
-    <option value="510">8:30 hrs</option>
+    <option value="510" selected>8:30 hrs</option>
     <option value="540">9:00 hrs</option>
   </select>
 
@@ -91,7 +91,7 @@
   <div id="result"></div>
 </div>
 
-<!-- Right Side -->
+<!-- World Clock Converter -->
 <div class="container">
   <h2>IST to World Clock 🌍</h2>
   <label for="tzSearch">Search Time Zone:</label>
@@ -107,6 +107,7 @@
 </div>
 
 <script>
+// Clock Display
 function updateClock() {
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-IN', { hour12: false });
@@ -117,6 +118,7 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
+// Time Parsers
 function parsePunched(input) {
   input = input.trim();
   if (input.includes(":")) {
@@ -142,6 +144,7 @@ function formatTime(mins) {
   return `${h} hrs ${m} mins`;
 }
 
+// Main Logic
 function calculateHours() {
   const punchedRaw = document.getElementById('punched').value;
   const now = document.getElementById('now').value;
@@ -160,35 +163,28 @@ function calculateHours() {
   const remainingMins = endMins - nowMins;
   const totalMins = punchedMins + remainingMins;
 
+  let status = `✅ Total by ${end}: <strong>${formatTime(totalMins)}</strong>`;
+  let suggestion = "";
   let completionTime = "";
-  if (punchedMins < requiredMins && totalMins < requiredMins) {
+
+  if (punchedMins >= requiredMins) {
+    suggestion = `🎉 You’ve completed your work hours. You can leave now!`;
+  } else {
+    suggestion = `⚠️ You haven't completed your work hours. Please continue working.`;
     const minutesNeeded = requiredMins - punchedMins;
     const nowDate = new Date();
     const completeAt = new Date(nowDate.getTime() + minutesNeeded * 60000);
     completionTime = completeAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
   }
 
-  let status = `✅ Total by ${end}: <strong>${formatTime(totalMins)}</strong>`;
-  let suggestion = "";
-
-  if (punchedMins >= requiredMins) {
-    suggestion = `🎉 You’ve completed your work hours. You can leave now!`;
-  } else if (punchedMins >= requiredMins - 30) {
-    suggestion = `😊 You are almost done! Pack your things, you will finish soon.`;
-  } else if (totalMins >= requiredMins) {
-    suggestion = `👍 You will complete your working hours by end of the day.`;
-  } else {
-    suggestion = `⚠️ You haven't completed your work hours. Please continue working.`;
-  }
-
   document.getElementById('result').innerHTML = `
     <p>${status}</p>
     <p>${suggestion}</p>
-    ${(punchedMins < requiredMins && totalMins < requiredMins) ? `<p>⏱️ You will complete your work at: <strong>${completionTime} IST</strong></p>` : ""}
+    ${completionTime ? `<p>⏱️ You will complete your work at: <strong>${completionTime} IST</strong></p>` : ""}
   `;
 }
 
-// World Clock Code
+// World Clock
 const timeZones = Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : [
   "UTC", "Asia/Kolkata", "America/New_York", "Europe/London", "Asia/Dubai", "Asia/Tokyo",
   "Australia/Sydney", "Europe/Paris", "America/Los_Angeles", "Asia/Shanghai", "Africa/Nairobi", "Europe/Berlin"
