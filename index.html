@@ -1,228 +1,362 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Punch Time & World Clock</title>
+  <meta charset="UTF-8" />
+  <title>Full Dashboard Kit</title>
   <style>
-    * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: url('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
-      background-size: cover;
+      background: #121212;
       color: #fff;
-      padding: 40px;
       display: flex;
-      gap: 40px;
       justify-content: center;
       flex-wrap: wrap;
+      gap: 30px;
+      padding: 30px;
     }
-    h2 { text-align: center; margin-bottom: 20px; }
+
     .container {
-      width: 420px;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 25px 20px;
-      border-radius: 10px;
+      background: #1f1f1f;
+      padding: 20px;
+      border-radius: 16px;
+      width: 360px;
+      box-shadow: 0 0 15px rgba(0,255,255,0.1);
     }
-    label {
-      margin-bottom: 5px;
-      display: block;
-      font-size: 15px;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
+
+    h2 {
+      text-align: center;
       margin-bottom: 15px;
     }
-    input[readonly] {
-      background-color: #e6e6e6;
-      color: #000;
+
+    label {
+      display: block;
+      margin: 10px 0 5px;
     }
-    button {
+
+    input, select, button {
       width: 100%;
-      background: #00c9a7;
-      color: white;
-      padding: 12px;
-      font-size: 16px;
+      padding: 10px;
+      margin-bottom: 12px;
+      border-radius: 8px;
       border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #result {
-      margin-top: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 15px;
-      border-radius: 5px;
       font-size: 16px;
     }
-    #clock {
+
+    input, select {
+      background: #2b2b2b;
+      color: #fff;
+    }
+
+    button {
+      cursor: pointer;
+      box-shadow: 0 0 10px #00ffcc80;
+    }
+
+    button.green {
+      background: #00cc88;
+      color: #fff;
+      transition: 0.2s;
+    }
+
+    button.green:hover { background: #009966; }
+
+    button.red {
+      background: #ff0033;
+      color: #fff;
+      transition: 0.2s;
+    }
+
+    button.red:hover { background: #cc0022; }
+
+    .clock-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .analog-clock {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      border: 6px solid #00ffcc;
+      border-radius: 50%;
+      margin-bottom: 10px;
+      box-shadow: 0 0 20px #00ffcc;
+    }
+
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom;
+      background: #00ffcc;
+      box-shadow: 0 0 10px #00ffcc;
+    }
+
+    .hour { height: 40px; width: 6px; }
+    .minute { height: 60px; width: 4px; }
+    .second { height: 70px; width: 2px; background: red; box-shadow: 0 0 8px red; }
+
+    .number {
+      position: absolute;
+      color: #fff;
+      font-size: 14px;
+      transform: translate(-50%, -50%);
+    }
+
+    #ist-time, #result, #currencyResult, #timeResult, #tzToTzResult {
+      margin-top: 10px;
       text-align: center;
-      font-size: 20px;
-      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .scroll-select {
+      height: 120px;
+      overflow-y: auto;
+      column-count: 2;
+      column-gap: 10px;
+    }
+
+    select.scroll-select option {
+      break-inside: avoid;
+      padding: 5px;
     }
   </style>
 </head>
 <body>
 
-<!-- Working Hours Calculator -->
-<div class="container">
-  <h2>Working Hours Calculator</h2>
-  <div id="clock"></div>
+  <!-- Currency Converter -->
+  <div class="container">
+    <h2>💱 Currency Converter</h2>
+    <label>Amount:</label>
+    <input type="number" id="currencyAmount" value="1">
+    <label>From Currency:</label>
+    <select id="fromCurrency"></select>
+    <label>To Currency:</label>
+    <select id="toCurrency"></select>
+    <button class="green" onclick="convertCurrency()">Convert Currency</button>
+    <div id="currencyResult"></div>
+  </div>
 
-  <label for="punched">Punched Hours (HH:MM or decimal):</label>
-  <input type="text" id="punched" placeholder="e.g. 5:30 or 0.25">
+  <!-- IST Clock + World Time -->
+  <div class="container clock-container">
+    <h2>🕒 IST Clock</h2>
+    <div class="analog-clock" id="analogClock">
+      <div class="hand hour" id="hourHand"></div>
+      <div class="hand minute" id="minuteHand"></div>
+      <div class="hand second" id="secondHand"></div>
+    </div>
+    <div id="ist-time">--:--:--</div>
 
-  <label for="now">Current Time (HH:MM):</label>
-  <input type="text" id="now" readonly>
+    <h2>🌍 World Time</h2>
+    <label>Search Time Zone:</label>
+    <input type="text" id="searchZone" placeholder="e.g. Tokyo, New York">
+    <label>Select Time Zone:</label>
+    <select id="timezoneSelect" class="scroll-select" size="10"></select>
+    <button class="green" onclick="convertTime()">Convert from IST</button>
+    <div id="timeResult"></div>
+  </div>
 
-  <label for="end">Office End Time (HH:MM):</label>
-  <input type="time" id="end" value="18:30">
+  <!-- Working Hours Calculator -->
+  <div class="container">
+    <h2>⌛ Working Hours Calculator</h2>
+    <label>Punched Hours (HH:MM or decimal):</label>
+    <input type="text" id="punched" placeholder="e.g. 5:30 or 0.25">
+    <label>Current Time (HH:MM):</label>
+    <input type="text" id="now" readonly>
+    <label>Office End Time:</label>
+    <input type="time" id="end" value="18:30">
+    <label>Required Working Time:</label>
+    <select id="required">
+      <option value="480">8:00 hrs</option>
+      <option value="510" selected>8:30 hrs</option>
+      <option value="540">9:00 hrs</option>
+    </select>
+    <button class="red" onclick="calculateHours()">Apply</button>
+    <div id="result"></div>
+  </div>
 
-  <label for="required">Required Working Time:</label>
-  <select id="required">
-    <option value="480">8:00 hrs</option>
-    <option value="510" selected>8:30 hrs</option>
-    <option value="540">9:00 hrs</option>
-  </select>
-
-  <button onclick="calculateHours()">Calculate</button>
-  <div id="result"></div>
-</div>
-
-<!-- World Clock Converter -->
-<div class="container">
-  <h2>IST to World Clock 🌍</h2>
-  <label for="tzSearch">Search Time Zone:</label>
-  <input type="text" id="tzSearch" placeholder="e.g. Tokyo, New York">
-
-  <label for="targetZone">Select Time Zone:</label>
-  <select id="targetZone"></select>
-
-  <label for="convertedTime">Converted Time:</label>
-  <input type="text" id="convertedTime" readonly>
-
-  <button onclick="convertTime()">Convert from IST</button>
-</div>
+  <!-- Timezone ➝ Timezone Converter -->
+  <div class="container">
+    <h2>🌐 Timezone ➝ Timezone</h2>
+    <label>From Time Zone:</label>
+    <select id="fromTzSelect" class="scroll-select" size="6"></select>
+    <label>To Time Zone:</label>
+    <select id="toTzSelect" class="scroll-select" size="6"></select>
+    <button class="green" onclick="convertBetweenZones()">Convert</button>
+    <div id="tzToTzResult"></div>
+  </div>
 
 <script>
-// Clock Display
-function updateClock() {
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-IN', { hour12: false });
-  const hhmm = timeStr.substring(0, 5);
-  document.getElementById('clock').innerHTML = "🕒 Current Time (IST): " + timeStr;
-  document.getElementById('now').value = hhmm;
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// Time Parsers
-function parsePunched(input) {
-  input = input.trim();
-  if (input.includes(":")) {
-    const [h, m] = input.split(":").map(Number);
-    if (isNaN(h) || isNaN(m) || h < 0 || m < 0) return NaN;
-    return h * 60 + m;
-  } else {
-    const decimal = parseFloat(input);
-    if (isNaN(decimal) || decimal < 0) return NaN;
-    return Math.round(decimal * 60);
-  }
-}
-
-function parseTime(t) {
-  const [h, m] = t.split(":").map(Number);
-  if (isNaN(h) || isNaN(m)) return NaN;
-  return h * 60 + m;
-}
-
-function formatTime(mins) {
-  let h = Math.floor(mins / 60);
-  let m = mins % 60;
-  return `${h} hrs ${m} mins`;
-}
-
-// Main Logic
-function calculateHours() {
-  const punchedRaw = document.getElementById('punched').value;
-  const now = document.getElementById('now').value;
-  const end = document.getElementById('end').value;
-  const requiredMins = parseInt(document.getElementById('required').value);
-
-  const punchedMins = parsePunched(punchedRaw);
-  const nowMins = parseTime(now);
-  const endMins = parseTime(end);
-
-  if (isNaN(punchedMins) || isNaN(nowMins) || isNaN(endMins)) {
-    document.getElementById('result').innerHTML = `<p style="color: yellow;">⚠️ Invalid time format. Use HH:MM or decimal hours.</p>`;
-    return;
-  }
-
-  const remainingMins = endMins - nowMins;
-  const totalMins = punchedMins + remainingMins;
-
-  let status = `✅ Total by ${end}: <strong>${formatTime(totalMins)}</strong>`;
-  let suggestion = "";
-  let completionTime = "";
-
-  if (punchedMins >= requiredMins) {
-    suggestion = `🎉 You’ve completed your work hours. You can leave now!`;
-  } else {
-    suggestion = `⚠️ You haven't completed your work hours. Please continue working.`;
-    const minutesNeeded = requiredMins - punchedMins;
-    const nowDate = new Date();
-    const completeAt = new Date(nowDate.getTime() + minutesNeeded * 60000);
-    completionTime = completeAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
-  }
-
-  document.getElementById('result').innerHTML = `
-    <p>${status}</p>
-    <p>${suggestion}</p>
-    ${completionTime ? `<p>⏱️ You will complete your work at: <strong>${completionTime} IST</strong></p>` : ""}
-  `;
-}
-
-// World Clock
-const timeZones = Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : [
-  "UTC", "Asia/Kolkata", "America/New_York", "Europe/London", "Asia/Dubai", "Asia/Tokyo",
-  "Australia/Sydney", "Europe/Paris", "America/Los_Angeles", "Asia/Shanghai", "Africa/Nairobi", "Europe/Berlin"
-];
-
-const tzSelect = document.getElementById("targetZone");
-const tzSearch = document.getElementById("tzSearch");
-
-function populateZones(filter = "") {
-  tzSelect.innerHTML = "";
-  timeZones
-    .filter(tz => tz.toLowerCase().includes(filter.toLowerCase()))
-    .forEach(tz => {
-      const option = document.createElement("option");
-      option.value = tz;
-      option.text = tz.replace("_", " ");
-      tzSelect.appendChild(option);
-    });
-}
-tzSearch.addEventListener("input", () => {
-  populateZones(tzSearch.value);
-});
-populateZones();
-
-function convertTime() {
-  const zone = document.getElementById("targetZone").value;
-  const istNow = new Date();
-  const options = {
-    timeZone: zone,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
+  // Currency Conversion
+  const rates = {
+    USD: 0.012, EUR: 0.011, GBP: 0.0095, JPY: 1.70, CNY: 0.087,
+    AUD: 0.018, CAD: 0.016, SGD: 0.016, CHF: 0.011, HKD: 0.095,
+    SEK: 0.12, NZD: 0.017, KRW: 15.5, BRL: 0.065, ZAR: 0.22,
+    THB: 0.42, IDR: 182, MXN: 0.20, NOK: 0.11, RUB: 1.1, INR: 1
   };
-  const formatter = new Intl.DateTimeFormat([], options);
-  const converted = formatter.format(istNow);
-  document.getElementById('convertedTime').value = converted;
-}
-</script>
 
+  let from = document.getElementById('fromCurrency'),
+      to = document.getElementById('toCurrency');
+
+  for (let c in rates) {
+    from.add(new Option(c, c));
+    to.add(new Option(c, c));
+  }
+
+  from.value = 'INR';
+  to.value = 'USD';
+
+  function convertCurrency() {
+    let amount = parseFloat(document.getElementById("currencyAmount").value),
+        f = from.value, t = to.value;
+    if (isNaN(amount)) {
+      document.getElementById("currencyResult").innerText = "⚠️ Invalid amount";
+      return;
+    }
+    let result = (amount / rates[f]) * rates[t];
+    document.getElementById("currencyResult").innerHTML =
+      `<p>${amount} ${f} = <strong>${result.toFixed(2)} ${t}</strong></p>`;
+  }
+
+  // Analog IST Clock
+  function updateClock() {
+    const now = new Date(), h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+    document.getElementById("ist-time").innerText =
+      `IST: ${(h % 12 || 12).toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+    document.getElementById("now").value = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    document.getElementById("hourHand").style.transform = `translateX(-50%) rotate(${(h % 12) * 30 + m / 2}deg)`;
+    document.getElementById("minuteHand").style.transform = `translateX(-50%) rotate(${m * 6}deg)`;
+    document.getElementById("secondHand").style.transform = `translateX(-50%) rotate(${s * 6}deg)`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  function placeClockNumbers() {
+    const c = document.getElementById("analogClock");
+    for (let i = 1; i <= 12; i++) {
+      let a = (i * 30) * Math.PI / 180,
+          x = 90 + 70 * Math.sin(a),
+          y = 90 - 70 * Math.cos(a),
+          d = document.createElement("div");
+      d.className = "number";
+      d.innerText = i;
+      d.style.left = `${x}px`;
+      d.style.top = `${y}px`;
+      c.appendChild(d);
+    }
+  }
+  placeClockNumbers();
+
+  // Timezone converter (IST to selected)
+  const allZones = [
+    "Asia/Kolkata", "Asia/Dubai", "Asia/Tokyo", "Asia/Singapore", "Asia/Shanghai", "Asia/Seoul",
+    "Europe/London", "Europe/Paris", "Europe/Berlin", "America/New_York", "America/Los_Angeles",
+    "Australia/Sydney", "Africa/Johannesburg", "Pacific/Auckland", "Africa/Abidjan", "Etc/UTC"
+  ];
+
+  function loadTimezones(filter = '') {
+    const select = document.getElementById("timezoneSelect");
+    select.innerHTML = '';
+    allZones
+      .filter(tz => tz.toLowerCase().includes(filter.toLowerCase()))
+      .forEach(tz => {
+        let opt = document.createElement("option");
+        opt.value = tz;
+        opt.textContent = tz;
+        select.appendChild(opt);
+      });
+  }
+
+  loadTimezones();
+  document.getElementById("searchZone").addEventListener("input", function () {
+    loadTimezones(this.value);
+  });
+
+  function convertTime() {
+    let tz = document.getElementById("timezoneSelect").value,
+        now = new Date(),
+        opt = { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true },
+        t = new Intl.DateTimeFormat('en-US', opt).format(now);
+    document.getElementById("timeResult").innerHTML =
+      `<p>🕒 Time in <strong>${tz}</strong>: <strong>${t}</strong></p>`;
+  }
+
+  // Punch calculator
+  function parseP(s) {
+    return s.includes(':') ? s.split(':').reduce((a, v, i) => (i ? a + +v : +v * 60), 0) : +s * 60;
+  }
+
+  function fmt(m) {
+    return `${Math.floor(m / 60)} hrs ${m % 60} mins`;
+  }
+
+  function calculateHours() {
+    let p = parseP(document.getElementById("punched").value) || 0,
+        nowM = parseP(document.getElementById("now").value),
+        end = parseP(document.getElementById("end").value),
+        req = +document.getElementById("required").value;
+
+    if (isNaN(p) || isNaN(nowM) || isNaN(end)) {
+      document.getElementById("result").innerText = "⚠️ Invalid input";
+      return;
+    }
+
+    let rem = end - nowM,
+        tot = p + rem,
+        out = `✅ Total by ${document.getElementById("end").value}: <strong>${fmt(tot)}</strong>`;
+
+    if (p >= req) {
+      out += `<br>🎉 Work done!`;
+    } else {
+      out += `<br>⏱️ Finish by: <strong>${
+        new Intl.DateTimeFormat('en-US', {
+          hour: '2-digit', minute: '2-digit', hour12: true
+        }).format(new Date(Date.now() + (req - p) * 60000))
+      }</strong>`;
+    }
+
+    document.getElementById("result").innerHTML = out;
+  }
+
+  // Timezone ➝ Timezone converter
+  function loadZoneToZoneDropdowns() {
+    const fromSel = document.getElementById("fromTzSelect");
+    const toSel = document.getElementById("toTzSelect");
+    allZones.forEach(tz => {
+      const opt1 = document.createElement("option");
+      opt1.value = tz;
+      opt1.textContent = tz;
+      const opt2 = opt1.cloneNode(true);
+      fromSel.appendChild(opt1);
+      toSel.appendChild(opt2);
+    });
+    fromSel.value = "Asia/Dubai";
+    toSel.value = "Asia/Singapore";
+  }
+  loadZoneToZoneDropdowns();
+
+  function convertBetweenZones() {
+    const fromTz = document.getElementById("fromTzSelect").value;
+    const toTz = document.getElementById("toTzSelect").value;
+
+    if (!fromTz || !toTz) {
+      document.getElementById("tzToTzResult").innerText = "⚠️ Please select both timezones.";
+      return;
+    }
+
+    const now = new Date();
+    const sourceTime = new Intl.DateTimeFormat('en-US', {
+      timeZone: fromTz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+    }).format(now);
+
+    const targetTime = new Intl.DateTimeFormat('en-US', {
+      timeZone: toTz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+    }).format(now);
+
+    document.getElementById("tzToTzResult").innerHTML =
+      `<p><strong>${fromTz}</strong>: ${sourceTime}<br><strong>${toTz}</strong>: ${targetTime}</p>`;
+  }
+</script>
 </body>
 </html>
